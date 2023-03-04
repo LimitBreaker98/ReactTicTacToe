@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+const IN_PROGRESS = 1;
+const FINISHED = 2;
+
 function Square({ content, onSquareClick }) {
   return (
     <button className='square' onClick={onSquareClick}>
@@ -11,13 +14,11 @@ function Square({ content, onSquareClick }) {
 export default function Board() {
   const [xIsNext, setXIsNext] = useState(true);
   const [squareValues, setSquareValues] = useState(Array(9).fill(null));
-  const winner = calculateWinner(squareValues);
-  let statusText = winner
-    ? `Winner is: ${winner}`
-    : `Next player: ${xIsNext ? 'X' : 'O'}`;
+  let gameStateObject = getGameState(squareValues, xIsNext);
+  let statusText = getGameStateMsg(gameStateObject);
 
   function handleSquareClick(i) {
-    if (squareValues[i] || calculateWinner(squareValues)) {
+    if (squareValues[i] || gameStateObject.state === FINISHED) {
       return;
     }
     const nextSquares = squareValues.slice();
@@ -74,7 +75,7 @@ export default function Board() {
   );
 }
 
-function calculateWinner(squares) {
+function getGameState(squares, xIsNext) {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -88,8 +89,21 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { state: FINISHED, winner: squares[a], nextPlayer: null };
     }
   }
-  return null;
+  const available = (square) => square === null;
+
+  return squares.some(available)
+    ? { state: IN_PROGRESS, winner: null, nextPlayer: xIsNext ? 'X' : 'O' }
+    : { state: FINISHED, winner: null, nextPlayer: null };
+}
+
+function getGameStateMsg(gameStateObject) {
+  if (gameStateObject.state === IN_PROGRESS) {
+    return `Next Player: ${gameStateObject.nextPlayer}`;
+  } else if (gameStateObject.winner) {
+    return `Winner is: ${gameStateObject.winner}`;
+  }
+  return 'Tied game!';
 }
