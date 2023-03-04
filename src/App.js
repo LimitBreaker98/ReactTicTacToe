@@ -11,9 +11,34 @@ function Square({ content, onSquareClick }) {
   );
 }
 
-export default function Board() {
+export default function Game() {
   const [xIsNext, setXIsNext] = useState(true);
-  const [squareValues, setSquareValues] = useState(Array(9).fill(null));
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const squareValues = history[history.length - 1];
+
+  function handlePlay(nextSquares) {
+    let newHistory = history.slice();
+    newHistory.push(nextSquares);
+    setHistory(newHistory);
+    setXIsNext(!xIsNext);
+  }
+  return (
+    <div className='game'>
+      <div className='game-board'>
+        <Board
+          xIsNext={xIsNext}
+          squareValues={squareValues}
+          onPlay={handlePlay}
+        />
+      </div>
+      <div className='game-info'>
+        <ol>{/*TODO*/}</ol>
+      </div>
+    </div>
+  );
+}
+
+function Board({ xIsNext, squareValues, onPlay }) {
   let gameStateObject = getGameState(squareValues, xIsNext);
   let statusText = getGameStateMsg(gameStateObject);
 
@@ -23,8 +48,7 @@ export default function Board() {
     }
     const nextSquares = squareValues.slice();
     nextSquares[i] = xIsNext ? 'X' : 'O';
-    setXIsNext(!xIsNext);
-    setSquareValues(nextSquares);
+    onPlay(nextSquares);
   }
   return (
     <div>
