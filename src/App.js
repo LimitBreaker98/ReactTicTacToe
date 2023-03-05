@@ -11,35 +11,49 @@ function Square({ content, onSquareClick }) {
   );
 }
 
+function getNextPlayer(moveIdx) {
+  return moveIdx % 2 ? 'X' : 'O';
+}
+
 export default function Game() {
-  const [xIsNext, setXIsNext] = useState(true);
+  const [moveIdx, setMoveIdx] = useState(0);
   const [history, setHistory] = useState([Array(9).fill(null)]);
-  const squareValues = history[history.length - 1];
+  const squareValues = history[moveIdx];
+
+  function goTo(moveIdx) {
+    setMoveIdx(moveIdx);
+  }
 
   function handlePlay(nextSquares) {
-    let newHistory = history.slice();
+    let newHistory = history.slice(0, moveIdx + 1);
     newHistory.push(nextSquares);
+    setMoveIdx(moveIdx + 1);
     setHistory(newHistory);
-    setXIsNext(!xIsNext);
   }
   return (
     <div className='game'>
       <div className='game-board'>
         <Board
-          xIsNext={xIsNext}
+          moveIdx={moveIdx}
           squareValues={squareValues}
           onPlay={handlePlay}
         />
       </div>
       <div className='game-info'>
-        <ol>{/*TODO*/}</ol>
+        <ol>
+          {history.map((_, idx) => (
+            <li>
+              <button onClick={() => goTo(idx)}> Go to move #{idx}</button>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   );
 }
 
-function Board({ xIsNext, squareValues, onPlay }) {
-  let gameStateObject = getGameState(squareValues, xIsNext);
+function Board({ moveIdx, squareValues, onPlay }) {
+  let gameStateObject = getGameState(squareValues, moveIdx);
   let statusText = getGameStateMsg(gameStateObject);
 
   function handleSquareClick(i) {
@@ -47,7 +61,7 @@ function Board({ xIsNext, squareValues, onPlay }) {
       return;
     }
     const nextSquares = squareValues.slice();
-    nextSquares[i] = xIsNext ? 'X' : 'O';
+    nextSquares[i] = getNextPlayer(moveIdx);
     onPlay(nextSquares);
   }
   return (
@@ -99,7 +113,7 @@ function Board({ xIsNext, squareValues, onPlay }) {
   );
 }
 
-function getGameState(squares, xIsNext) {
+function getGameState(squares, moveIdx) {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -119,7 +133,7 @@ function getGameState(squares, xIsNext) {
   const available = (square) => square === null;
 
   return squares.some(available)
-    ? { state: IN_PROGRESS, winner: null, nextPlayer: xIsNext ? 'X' : 'O' }
+    ? { state: IN_PROGRESS, winner: null, nextPlayer: getNextPlayer(moveIdx) }
     : { state: FINISHED, winner: null, nextPlayer: null };
 }
 
